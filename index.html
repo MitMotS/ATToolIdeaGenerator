@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistive Technology Selection Tool</title>
+<style>
+:root{--fg:#1b1b1b;--bg:#fff;--pri:#0b5551;--bd:#4d5b5a;--soft:#e9f4f2;--err:#a40000}
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;font-family:Lexend,"Lexend Deca",Verdana,Tahoma,"Segoe UI",sans-serif;letter-spacing:.01em;line-height:1.6;color:var(--fg);background:var(--bg)}
+.wrap{max-width:60rem;margin:0 auto;padding:1rem}
+.skip{position:absolute;left:-999px;top:0;background:var(--pri);color:#fff;padding:.75rem 1rem;z-index:9}
+.skip:focus{left:0}
+header{background:var(--pri);color:#fff}
+header h1{margin:0;font-size:1.6rem}
+header p{margin:.25rem 0 0}
+h2{font-size:1.35rem;margin:1.5rem 0 .5rem}
+h3{font-size:1.15rem;margin:1.5rem 0 .5rem;border-bottom:2px solid var(--fg)}
+h4{font-size:1rem;margin:1rem 0 .25rem}
+:focus-visible{outline:3px solid var(--pri);outline-offset:2px;box-shadow:0 0 0 5px #fff}
+header :focus-visible{outline-color:#fff;box-shadow:none}
+.note{background:var(--soft);border-left:6px solid var(--pri);padding:.75rem 1rem;margin:1rem 0}
+fieldset{border:1px solid var(--bd);border-radius:.5rem;margin:1.25rem 0;padding:.75rem 1rem}
+legend{font-weight:700;font-size:1.1rem;padding:0 .5rem}
+.hint{margin:.25rem 0 .5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:.25rem .75rem}
+.other{margin-top:.5rem;border-top:1px solid var(--bd);padding-top:.5rem}.oc{display:flex;gap:.6rem;align-items:center;min-height:2.75rem;cursor:pointer}.other input[type=text]:disabled{background:#eee;border-color:#767676}
+.grid label{display:flex;gap:.6rem;align-items:flex-start;min-height:2.75rem;padding:.4rem .25rem;cursor:pointer}
+input[type=checkbox]{width:1.4rem;height:1.4rem;flex:none;margin-top:.15rem;accent-color:var(--pri)}
+label.f{display:block;font-weight:700;margin-top:.5rem}
+input[type=text],textarea{width:100%;font:inherit;padding:.6rem;border:2px solid var(--bd);border-radius:.4rem;color:var(--fg);background:#fff}
+button{font:inherit;font-weight:700;padding:.75rem 1.25rem;min-height:2.75rem;border-radius:.4rem;border:2px solid var(--pri);background:var(--pri);color:#fff;cursor:pointer;margin:.25rem .5rem .25rem 0}
+button.sec{background:#fff;color:var(--pri)}
+button:hover{text-decoration:underline}
+#err{color:var(--err);font-weight:700;margin:.5rem 0}
+#err:empty{display:none}
+dl{margin:0}dt{font-weight:700;margin-top:.5rem}dd{margin:0}
+ul.t{list-style:none;padding:0;margin:0}
+ul.t li{border:1px solid var(--bd);border-left-width:8px;border-radius:.3rem;padding:.5rem .75rem;margin:.4rem 0;break-inside:avoid}
+li.L{border-left-style:solid}li.M{border-left-style:double}li.H{border-left-style:dashed;border-left-width:8px}
+.why{font-size:.95rem}
+.lvl{font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.printonly{display:none}
+footer{border-top:1px solid var(--bd);margin-top:2rem;text-align:center;font-size:.85rem}
+@media (prefers-reduced-motion:no-preference){button{transition:background .15s}}
+@media print{
+ .noprint,header,.skip{display:none!important}
+ .printonly{display:block}
+ body{font-size:11pt}.wrap{max-width:none;padding:0}
+ #results{display:block!important;padding-bottom:2rem}
+ footer{position:fixed;bottom:0;left:0;right:0;margin:0;background:#fff;font-size:9pt}
+ footer .wrap{padding:.25rem}
+ a{color:inherit}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header><div class="wrap"><h1>Assistive Technology Selection Tool</h1>
+<p>Match tasks, needs and barriers to low-tech, mid-tech and high-tech options.</p></div></header>
+<main id="main" class="wrap" tabindex="-1">
+<div id="status" class="sr" role="status" aria-live="polite"></div>
+
+<div id="formArea">
+<div class="note">
+<p><strong>Privacy:</strong> This page runs entirely in your browser. Nothing is sent, stored or shared, and no cookies or accounts are used. After you print or save the PDF, the form clears itself. Please use initials or a code rather than a full name.</p>
+<p>Select everything that applies, then choose <em>Generate suggestions</em>. Suggestions are starting points for team discussion and trial use (for example within the SETT framework), not prescriptions. Product names are examples, not endorsements.</p>
+</div>
+<form id="form" novalidate aria-describedby="err">
+<fieldset><legend>Student</legend>
+<label class="f" for="sid">Student initials or code (optional)</label>
+<input type="text" id="sid" autocomplete="off" maxlength="40">
+</fieldset>
+<div id="groups"></div>
+<fieldset><legend>Additional notes (optional)</legend>
+<label class="f" for="notes">Other considerations, student preferences, constraints, etc. (included in the PDF)</label>
+<textarea id="notes" rows="4" autocomplete="off"></textarea>
+</fieldset>
+<p id="err" role="alert" tabindex="-1"></p>
+<button type="button" id="gen">Generate suggestions</button>
+<button type="button" class="sec" id="clear">Clear form</button>
+</form>
+</div>
+
+<section id="results" hidden aria-labelledby="rh">
+<h2 id="rh" tabindex="-1">Assistive technology suggestions</h2>
+<p class="printonly"><strong>Confidential student information. Do not share without authorization.</strong></p>
+<div id="out"></div>
+<p class="note">These suggestions are generated from the selections above and are a starting point only. Trial tools with the student in real tasks and settings, collect data on effectiveness, and consider training, funding and the student's own preferences. Final decisions rest with the student's team.</p>
+<div class="noprint">
+<button type="button" id="print">Print or save as PDF</button>
+<button type="button" class="sec" id="back">Edit answers</button>
+<button type="button" class="sec" id="clear2">Clear everything</button>
+<p id="pmsg" role="alert" style="color:var(--err);font-weight:700"></p>
+<p class="hint">In the print dialog, choose "Save as PDF" as the destination. The form clears automatically when the dialog closes, so save or print before closing it.</p>
+</div>
+</section>
+</main>
+<footer id="foot"><div class="wrap"><small>mtsabatino2026</small></div></footer>
+
+<script>
+const G=[
+["strengths","Strengths","Things the student does well or enjoys. These are listed in the PDF to build on.",[
+["listen","Strong listening comprehension"],["verbal","Strong spoken language"],["visual","Responds well to visuals"],["memory","Good memory for facts or routines"],["tech","Interested in technology"],["creative","Creative or imaginative"],["peer","Positive peer relationships"],["motiv","Motivated and persistent"],["reason","Strong reasoning or problem solving"]]],
+["needs","Learning and access needs","Select the areas where the student needs support.",[
+["read","Reading and decoding"],["write","Writing and handwriting"],["spell","Spelling"],["org","Organization and executive function"],["attn","Attention and focus"],["math","Math"],["expr","Expressive communication"],["recep","Understanding language"],["vis","Vision"],["hear","Hearing"],["fine","Fine motor control"],["mob","Positioning and mobility"],["sens","Sensory regulation"],["mem","Memory"]]],
+["tasks","Tasks the student needs to complete","Required. Choose at least one.",[
+["rd","Reading text"],["wr","Writing"],["ma","Math computation and problem solving"],["nt","Taking notes"],["di","Participating in discussion"],["cm","Communicating wants and needs"],["rt","Following the daily schedule and routines"],["tr","Transitioning between activities"],["ts","Completing tests and assessments"],["mt","Managing materials and belongings"],["dr","Following multi-step directions"],["dv","Using a computer or tablet"]]],
+["barriers","Barriers during tasks","What gets in the way of independence?",[
+["decode","Reads slowly or with great effort"],["place","Loses place when reading"],["volume","Overwhelmed by amount of text"],["see","Cannot see print or screen well"],["hearb","Cannot hear or process spoken instruction"],["legible","Handwriting is hard to read"],["grip","Difficulty gripping or controlling tools"],["keyb","Difficulty using keyboard or mouse"],["fatigue","Tires quickly"],["pos","Difficulty maintaining posture or position"],["start","Difficulty starting or getting ideas down"],["spellb","Spelling errors block expression"],["words","Difficulty finding or producing words"],["unintel","Speech is hard for others to understand"],["numbers","Misaligns or misreads numbers"],["steps","Cannot hold multiple steps in mind"],["time","Loses track of time"],["lose","Loses or misplaces materials"],["focus","Easily distracted"],["overwhelm","Sensory overload or dysregulation"],["avoid","Avoidance or frustration"]]]];
+const LAB={};G.forEach(g=>g[3].forEach(o=>LAB[o[0]]=o[1]));
+const TOOLS=`L|Reading ruler, colored overlay or sticky-note window|Isolates a line of text and reduces visual crowding.|rd ts|read vis attn|place decode volume focus
+L|Pre-taught vocabulary and picture glossary|Previews key words with images before reading.|rd|read recep mem|decode avoid
+L|Enlarged or high-contrast print copies|Larger font, spacing and contrast on paper.|rd ts nt|vis read|see place
+M|Scanning reading pen or audiobook player|Reads printed words aloud or provides recorded text.|rd ts|read vis|decode volume fatigue see
+M|E-reader or tablet with adjustable text|Change font, size, spacing and background color.|rd|read vis attn|place see volume
+H|Text-to-speech with highlighting (e.g., Immersive Reader, Read&Write, Voice Dream)|Reads digital text aloud while highlighting words; may offer focus mode and translation.|rd ts|read recep|decode volume avoid fatigue
+H|Screen reader and magnification software|Speech output and enlargement for digital content.|rd dv ts|vis|see
+L|Pencil grips, slant board and raised-line paper|Improves grasp, wrist position and line orientation.|wr ts|write fine|grip legible fatigue pos
+L|Graphic organizers, sentence starters and word banks|Reduces planning and spelling load.|wr ts|write spell org expr|start spellb avoid words
+M|Portable word processor or keyboard|Typed output replaces handwriting with few distractions.|wr ts nt|write fine|legible fatigue grip focus
+M|Handheld spell checker or talking dictionary|Supports independent spelling.|wr|spell read|spellb
+H|Speech-to-text dictation (e.g., built-in voice typing, Dragon)|Converts spoken ideas into text.|wr ts dv nt|write fine expr|start legible fatigue keyb grip spellb
+H|Word prediction and grammar support (e.g., Co:Writer, Grammarly)|Suggests words after a few letters and corrects errors.|wr ts|write spell|spellb start fatigue legible
+L|Graph paper, grid templates and number lines|Keeps digits aligned and shows number relationships.|ma ts|math vis fine|numbers legible place
+L|Multiplication chart, manipulatives and color-coded steps|Reduces memory demand during calculation.|ma ts|math mem|steps avoid numbers
+M|Talking or large-display calculator|Audio or large visual feedback for entered numbers.|ma ts|math vis|numbers see
+H|Math tools with equation editors and virtual manipulatives (e.g., Equatio, Desmos)|Enter, hear and manipulate math on screen.|ma ts|math write fine vis|legible numbers keyb see grip
+L|Guided notes, outlines and peer note copies|Pre-filled structure so the student records key ideas only.|nt|write org attn mem|start legible fatigue focus
+M|Digital recorder or smartpen|Captures audio to review later.|nt di|write recep mem|legible fatigue hearb
+H|Live captioning and auto-transcription (e.g., Live Transcribe, Otter)|Real-time text of spoken instruction.|nt di ts|hear recep write|hearb legible
+L|Picture communication boards, choice cards and response cards|Express choices and responses without speech.|di cm tr|expr|words unintel avoid
+L|Conversation starters and printed scripts|Visual phrases for joining discussions.|di cm|expr|words avoid start
+M|Voice output devices (e.g., BIGmack, GoTalk, Talking Photo Album)|Recorded messages activated by touch or switch.|di cm|expr fine|words unintel grip
+M|Personal FM/DM listening system|Sends the teacher's voice directly to the student.|di dr|hear attn|hearb focus
+H|AAC apps or dedicated devices (e.g., Proloquo2Go, TD Snap, LAMP Words for Life)|Symbol- or text-based speech with growing vocabulary.|di cm|expr|words unintel avoid
+H|Eye-gaze or switch-access AAC|Communication access for significant motor limitations.|di cm dv|expr fine mob|unintel keyb grip
+L|Visual schedule and first-then board|Shows what is happening and what comes next.|rt tr dr|org recep attn sens|steps time overwhelm avoid
+L|Visual timer (e.g., Time Timer)|Makes the passage of time visible.|rt tr ts|org attn sens|time avoid overwhelm
+M|Vibrating watch or talking reminder device|Private prompts for transitions and tasks.|rt tr mt|org attn mem|time start lose
+H|Digital schedule and task apps with alerts (e.g., Choiceworks, Google Calendar)|Customizable visual schedules and reminders.|rt tr mt dr|org mem attn|time steps lose start
+H|Video modeling|Short videos showing routine or transition steps.|tr rt dr|recep sens org|overwhelm avoid steps
+L|Test accommodations: extended time, reduced choices, quiet space, reader or scribe|Lowers barriers without changing what is measured (per IEP/504).|ts|read write attn sens|fatigue focus overwhelm decode legible
+M|Noise-reducing headphones|Reduces auditory distraction.|ts rd wr ma|attn sens|focus overwhelm
+H|Accessible digital testing tools (built-in text-to-speech, magnifier, speech-to-text)|Embedded supports in the testing platform.|ts|read write vis|decode see legible keyb
+L|Color-coded folders, bins and packing checklist|A simple, consistent organization system.|mt|org mem|lose time steps
+M|Bluetooth item trackers (e.g., Tile, AirTag)|Helps find misplaced items.|mt|org|lose
+H|Cloud storage and digital planner with reminders|One location for assignments and files.|mt|org mem|lose time start
+L|Step-by-step visual or checklist cards|Breaks directions into manageable steps.|dr|org mem recep|steps start
+M|Recordable step cards or voice recorder|Allows directions to be replayed.|dr|recep mem hear|steps hearb
+L|Keyguard, labeled keys and stabilization or positioning supports|Reduces accidental presses and improves posture.|dv wr|fine mob vis|keyb grip pos
+L|Stylus, mouth stick and built-in accessibility settings (sticky keys, large cursor)|Low-cost changes that improve access.|dv|fine vis|keyb grip see
+M|Trackball, large-key keyboard or adapted mouse|Alternatives to standard input devices.|dv|fine vis|keyb grip see
+H|Voice control, head tracking or switch scanning|Hands-free control of a computer or tablet.|dv|fine mob|keyb grip pos`
+.split("\n").map(l=>{const p=l.split("|"),s=i=>p[i].split(" ");return{lv:p[0],n:p[1],d:p[2],t:s(3),nd:s(4),b:s(5)}});
+const LV={L:"Low-tech / no-tech",M:"Mid-tech",H:"High-tech"};
+const $=id=>document.getElementById(id);
+const form=$("form");let printing=false;
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+G.forEach(g=>{const f=el("fieldset"),l=el("legend",null,g[1]);f.append(l,el("p","hint",g[2]));
+const d=el("div","grid");g[3].forEach(o=>{const lb=el("label"),i=document.createElement("input");i.type="checkbox";i.name=g[0];i.value=o[0];lb.append(i,el("span",null,o[1]));d.append(lb)});
+f.append(d);
+const ro=el("div","other"),ol=el("label","oc"),oc=document.createElement("input");oc.type="checkbox";oc.name=g[0]+"Other";oc.id=g[0]+"OC";ol.append(oc,el("span",null,"Other"));
+const il=el("label","f","Describe other (" +g[1].toLowerCase()+")"),ot=document.createElement("input");ot.type="text";ot.id=g[0]+"OT";ot.maxLength=200;ot.disabled=true;ot.autocomplete="off";il.htmlFor=ot.id;
+oc.addEventListener("change",()=>{ot.disabled=!oc.checked;if(oc.checked)ot.focus();else ot.value=""});
+ro.append(ol,il,ot);f.append(ro);$("groups").append(f)});
+const oth=k=>$(k+"OC").checked?$(k+"OT").value.trim():"";
+const syncOther=()=>G.forEach(g=>{$(g[0]+"OT").disabled=!$(g[0]+"OC").checked});
+form.addEventListener("reset",()=>setTimeout(syncOther,0));
+const sel=n=>[...form.querySelectorAll(`input[name=${n}]:checked`)].map(i=>i.value);
+const names=a=>a.map(x=>LAB[x]).join("; ")||"None selected";
+const nm=(k,a)=>{const r=a.map(x=>LAB[x]),o=oth(k);if(o)r.push("Other: "+o);return r.join("; ")||"None selected"};
+function say(m){const s=$("status");s.textContent="";setTimeout(()=>s.textContent=m,50)}
+form.addEventListener("submit",e=>{e.preventDefault();generate()});
+$("gen").addEventListener("click",generate);
+function fail(m,target){const e=$("err");e.textContent=m;e.focus();e.scrollIntoView({block:"center"})}
+function generate(){
+const tasks=sel("tasks");
+for(const g of G){if($(g[0]+"OC").checked&&!$(g[0]+"OT").value.trim()){fail("Error: describe the other item you selected under "+g[1]+".");return}}
+if(!tasks.length&&!oth("tasks")){fail("Error: select at least one task in the \"Tasks the student needs to complete\" section.");return}
+$("err").textContent="";build();}
+function build(){
+const needs=sel("needs"),bars=sel("barriers"),tasks=sel("tasks"),out=$("out");out.textContent="";
+const sid=$("sid").value.trim(),nt=$("notes").value.trim();
+const p=el("p",null,`Date: ${new Date().toLocaleDateString()}${sid?"   |   Student: "+sid:""}`);out.append(p);
+out.append(el("h3",null,"Student profile"));
+const dl=el("dl");[["Strengths",nm("strengths",sel("strengths"))],["Learning and access needs",nm("needs",needs)],["Tasks",nm("tasks",tasks)],["Barriers",nm("barriers",bars)],["Notes",nt||"None"]].forEach(r=>{dl.append(el("dt",null,r[0]),el("dd",null,r[1]))});out.append(dl);
+if(oth("needs")||oth("barriers"))out.append(el("p","note","Items entered under \"Other\" for needs or barriers appear in the profile but are not used to rank options. Consider them when the team reviews the suggestions."));
+if(!needs.length&&!bars.length)out.append(el("p","note","No needs or barriers were selected, so options below are general for each task. Select barriers for more tailored suggestions."));
+tasks.forEach(t=>{out.append(el("h3",null,"Task: "+LAB[t]));
+["L","M","H"].forEach(lv=>{
+const c=TOOLS.filter(x=>x.lv==lv&&x.t.includes(t)).map(x=>{const mn=x.nd.filter(k=>needs.includes(k)),mb=x.b.filter(k=>bars.includes(k));return{x,mn,mb,s:mb.length*2+mn.length}}).sort((a,b)=>b.s-a.s);
+const m=c.filter(r=>r.s>0),list=m.length?m.slice(0,2):c.slice(0,1);
+out.append(el("h4","lvl",LV[lv]));
+if(!list.length){out.append(el("p",null,"No specific option listed for this task. Consult the team."));return}
+const ul=el("ul","t");list.forEach(r=>{const li=el("li",lv);li.append(el("strong",null,r.x.n),el("br"),document.createTextNode(r.x.d));
+const w=el("div","why");w.textContent=r.s?"Why suggested: "+(r.mb.length?"addresses "+r.mb.map(k=>LAB[k].toLowerCase()).join(", ")+". ":"")+(r.mn.length?"Supports "+r.mn.map(k=>LAB[k].toLowerCase()).join(", ")+".":""):"General option for this task; no selected barrier or need matched.";li.append(w);ul.append(li)});out.append(ul)})});
+if(oth("tasks")){out.append(el("h3",null,"Task (other): "+oth("tasks")),el("p",null,"No automated suggestions are available for this task. Discuss options with the team, using the barriers and needs listed above."))}
+$("formArea").hidden=true;$("results").hidden=false;
+const h=$("rh");h.focus();window.scrollTo(0,0);say("Suggestions generated.");}
+$("back").onclick=()=>{$("results").hidden=true;$("formArea").hidden=false;$("main").focus();say("Returned to the form. Your answers are kept.")};
+function wipe(m){form.reset();$("out").textContent="";$("err").textContent="";$("results").hidden=true;$("formArea").hidden=false;$("main").focus();window.scrollTo(0,0);say(m)}
+$("clear").onclick=()=>wipe("Form cleared.");$("clear2").onclick=()=>wipe("Everything cleared.");
+let fired=false;
+window.addEventListener("beforeprint",()=>{fired=true;if(!$("results").hidden)printing=true});
+$("print").onclick=()=>{
+$("pmsg").textContent="";fired=false;printing=true;const t=document.title;document.title="AT-Suggestions-"+new Date().toISOString().slice(0,10);
+try{window.print()}catch(e){}
+document.title=t;
+setTimeout(()=>{if(!fired){printing=false;const m="Printing was blocked by this viewer. Open this file directly in Chrome, Edge, Firefox or Safari, then choose Print or save as PDF again. You can also press Ctrl+P (Command+P on Mac).";$("pmsg").textContent=m}},400)};
+window.addEventListener("afterprint",()=>{if(printing){printing=false;wipe("Print dialog closed. The form has been cleared.")}});
+</script>
+</body>
+</html>
